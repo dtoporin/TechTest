@@ -1,0 +1,18 @@
+users:
+  - name: ann
+    shell: /bin/bash
+    groups:
+      - staff
+      - developers
+
+  - name: bob
+    shell: /bin/bash
+    gropus:
+      - staff
+      - developers
+
+  - name: john
+    shell: /bin/bash
+    groups:
+      - staff
+      - developers

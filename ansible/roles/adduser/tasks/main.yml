@@ -1,0 +1,28 @@
+---
+- name: add new user
+  user:
+    name: '{{ item.name }}'          
+    shell: '{{ item.shell }}'
+    append: yes
+    groups: '{{ item.groups }}'
+  with_items: '{{ users }}'
+
+- name: create .ssh directory
+  file:
+    path: /home/{{ item.name }}/.ssh
+    state: present
+    mode: 0700
+    owner: '{{ item.name }}'
+    group: '{{ item.name }}'
+   with_items: '{{ users }}'
+
+- name: copy ssh key to host
+  copy:
+    src: files/{{ item.name }}
+    dest: /home/{{ item.name }}/.ssh/authorized_keys
+    mode: 0600
+    owner: '{{ item.name }}'
+    group: '{{ item.name }}'
+  with_items: '{{ users }}'
+
+

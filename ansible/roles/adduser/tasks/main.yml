@@ -1,10 +1,15 @@
 ---
+- name: Change server password policy (min password lenght to 12 symbols)
+  shell: authconfig --passminlen=12 --update
+
 - name: Add new user
   user:
     name: '{{ item.name }}'          
     shell: '{{ item.shell }}'
     append: yes
     groups: '{{ item.groups }}'
+    generate_ssh_key: yes
+    ssh_key_bits: 4096 
   loop: '{{ users }}'
 
 - name: Reset password to default 12345
@@ -15,21 +20,11 @@
   shell: chage -d 0 {{ item.name }}
   loop: '{{ users }}'
 
-- name: add sudo rights
+- name: Add sudo rights
   template:
     src: templates/sudoersd.j2
     dest: /etc/sudoers.d/{{ item.name }}
   loop: '{{ users }}'
-
-#- name: create directories in home
-#  shell: mkdir /home/{{ item.name }}/{git,documentation,export,.ssh,.credentials}
-#  loop: '{{ users }}'
-
-#- name: create directories in home
-#  shell: mkdir /home/{{ item[0] }}/{{ item[1] }}
-#  with_nested: 
-#    - ['ann', 'bob', 'john']
-#    - ['git', 'documentation', 'export', '.ssh', '.credentials']
 
 - name: Creating directories in user's hoeme
   file:
@@ -42,32 +37,22 @@
     - '{{ users }}'
     - '{{ dirs }}'
 
-- name: set PATH
+- name: Set PATH
   lineinfile:
     path: /home/{{ item.name }}/.bashrc
     line: 'export PATH="$PATH:/opt/app/bin:/opt/app2/exec"'
   loop: '{{ users }}'
- 
-- name: Create local directories for SSH Keys
-  file:
-    path: /tmp/ssh-keypair/{{ item.name }}
-    state: directory
-    mode: 0700
+
+- name: Copy authorized key file
+  shell: cat /home/{{ item.name }}/.ssh/id_rsa.pub > /home/{{ item.name }}/.ssh/authorized_keys
   loop: '{{ users }}'
-  delegate_to: localhost
 
-#- name: Generate ssh keypair 
-#  shell: ssh-keygen -b 4096 -f /tmp/ssh-keypair/{{ item.name }}/id_rsa -q -N ""
-#  loop: '{{ users }}'
-#  delegate_to: localhost
-
-- name: Copy authorized key file`
-  copy:
-    src: /tmp/ssh-keypair/{{ item.name }}/id_rsa.pub
-    dest: /home/{{ item.name }}/.ssh/authorized_keys
+- name: Change owner and permissions for authorized_keys
+  file:
+    path: /home/{{ item.name }}/.ssh/authorized_keys
     owner: '{{ item.name }}'
     group: '{{ item.name }}'
-    mode: 0400
+    mode: 0400  
   loop: '{{ users }}'
 
 - name: Copy credentials file
@@ -78,15 +63,6 @@
     group: '{{ item.name }}'
     mode: 0400
   loop: '{{ users }}'
-
-#- name: copy ssh key to host
-#  copy:
-#    src: files/{{ item.name }}
-#    dest: /home/{{ item.name }}/.ssh/authorized_keys
-#    mode: 0600
-#    owner: '{{ item.name }}'
-#    group: '{{ item.name }}'
-#  with_items: '{{ users }}'
 
 - name: Add or modify soft nofile limits for user
   pam_limits:
@@ -104,12 +80,12 @@
     value: '{{ item.nofile }}'
   loop: '{{ users }}'
 
-- name: Istall pip
+- name: Install pip
   yum:
    name: python-pip
    state: present
 
-- name: install venv
+- name: Install venv
   pip:
     name: virtualenv 
   

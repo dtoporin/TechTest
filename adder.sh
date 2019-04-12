@@ -1,4 +1,6 @@
 #!/bin/bash
+echo "Change password policy"
+authconfig --passminlen=12 --update
 echo "Add user $1"
 adduser --disabled-password --gecos "" $1
 echo "Set up default password"

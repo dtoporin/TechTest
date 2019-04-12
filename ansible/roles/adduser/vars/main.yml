@@ -4,18 +4,24 @@ users:
     nofile: 10240
     groups:
       - staff,developers
+    pymodules:
+      - Requests,cryptography
 
   - name: bob
     shell: /bin/bash
     nofile: 10240
     groups:
       - staff,developers
+    pymodules:
+      - Requests,cryptography
   
   - name: john
     nofile: 10240
     shell: /bin/bash
     groups:
       - staff,developers
+    pymodules:
+      - Requests,cryptography, Pillow
 
 dirs:
   - name: git

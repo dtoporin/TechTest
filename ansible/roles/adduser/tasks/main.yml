@@ -91,9 +91,7 @@
   
 - name: Create venv
   pip:
-    name: 
-      - Request
-      - cryptography
+    name: '{{ item.pymodules }}'
     virtualenv: /home/{{ item.name }}/venv
   loop: '{{ users }}'
 

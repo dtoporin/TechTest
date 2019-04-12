@@ -1,18 +1,25 @@
 users:
   - name: ann
     shell: /bin/bash
+    nofile: 10240
     groups:
-      - staff
-      - developers
+      - staff,developers
 
   - name: bob
     shell: /bin/bash
-    gropus:
-      - staff
-      - developers
-
+    nofile: 10240
+    groups:
+      - staff,developers
+  
   - name: john
+    nofile: 10240
     shell: /bin/bash
     groups:
-      - staff
-      - developers
+      - staff,developers
+
+dirs:
+  - name: git
+  - name: documentation
+  - name: export
+  - name: .ssh
+  - name: .credentials

@@ -1,28 +1,123 @@
 ---
-- name: add new user
+- name: Add new user
   user:
     name: '{{ item.name }}'          
     shell: '{{ item.shell }}'
     append: yes
     groups: '{{ item.groups }}'
-  with_items: '{{ users }}'
+  loop: '{{ users }}'
 
-- name: create .ssh directory
+- name: Reset password to default 12345
+  shell: echo "{{ item.name }}:12345" | chpasswd
+  loop: '{{ users }}'
+
+- name: Force a user to change their password at next logon
+  shell: chage -d 0 {{ item.name }}
+  loop: '{{ users }}'
+
+- name: add sudo rights
+  template:
+    src: templates/sudoersd.j2
+    dest: /etc/sudoers.d/{{ item.name }}
+  loop: '{{ users }}'
+
+#- name: create directories in home
+#  shell: mkdir /home/{{ item.name }}/{git,documentation,export,.ssh,.credentials}
+#  loop: '{{ users }}'
+
+#- name: create directories in home
+#  shell: mkdir /home/{{ item[0] }}/{{ item[1] }}
+#  with_nested: 
+#    - ['ann', 'bob', 'john']
+#    - ['git', 'documentation', 'export', '.ssh', '.credentials']
+
+- name: Creating directories in user's hoeme
   file:
-    path: /home/{{ item.name }}/.ssh
-    state: present
-    mode: 0700
-    owner: '{{ item.name }}'
-    group: '{{ item.name }}'
-   with_items: '{{ users }}'
-
-- name: copy ssh key to host
-  copy:
-    src: files/{{ item.name }}
-    dest: /home/{{ item.name }}/.ssh/authorized_keys
+    path: /home/{{ item.0.name }}/{{ item.1.name }}
+    state: directory
     mode: 0600
+    owner: '{{ item.0.name }}'
+    group: '{{ item.0.name }}'
+  with_nested:
+    - '{{ users }}'
+    - '{{ dirs }}'
+
+- name: set PATH
+  lineinfile:
+    path: /home/{{ item.name }}/.bashrc
+    line: 'export PATH="$PATH:/opt/app/bin:/opt/app2/exec"'
+  loop: '{{ users }}'
+ 
+- name: Create local directories for SSH Keys
+  file:
+    path: /tmp/ssh-keypair/{{ item.name }}
+    state: directory
+    mode: 0700
+  loop: '{{ users }}'
+  delegate_to: localhost
+
+#- name: Generate ssh keypair 
+#  shell: ssh-keygen -b 4096 -f /tmp/ssh-keypair/{{ item.name }}/id_rsa -q -N ""
+#  loop: '{{ users }}'
+#  delegate_to: localhost
+
+- name: Copy authorized key file`
+  copy:
+    src: /tmp/ssh-keypair/{{ item.name }}/id_rsa.pub
+    dest: /home/{{ item.name }}/.ssh/authorized_keys
     owner: '{{ item.name }}'
     group: '{{ item.name }}'
-  with_items: '{{ users }}'
+    mode: 0400
+  loop: '{{ users }}'
 
+- name: Copy credentials file
+  copy:
+    src: files/app
+    dest: /home/{{ item.name }}/.credentials/app
+    owner: '{{ item.name }}'
+    group: '{{ item.name }}'
+    mode: 0400
+  loop: '{{ users }}'
+
+#- name: copy ssh key to host
+#  copy:
+#    src: files/{{ item.name }}
+#    dest: /home/{{ item.name }}/.ssh/authorized_keys
+#    mode: 0600
+#    owner: '{{ item.name }}'
+#    group: '{{ item.name }}'
+#  with_items: '{{ users }}'
+
+- name: Add or modify soft nofile limits for user
+  pam_limits:
+    domain: '{{ item.name }}'
+    limit_type: soft
+    limit_item: nofile
+    value: '{{ item.nofile }}'
+  loop: '{{ users }}'
+
+- name: Add or modify hard nofile limits for user
+  pam_limits:
+    domain: '{{ item.name }}'
+    limit_type: hard
+    limit_item: nofile
+    value: '{{ item.nofile }}'
+  loop: '{{ users }}'
+
+- name: Istall pip
+  yum:
+   name: python-pip
+   state: present
+
+- name: install venv
+  pip:
+    name: virtualenv 
+  
+- name: Create venv
+  pip:
+    name: 
+      - Request
+      - cryptography
+    virtualenv: /home/{{ item.name }}/venv
+  loop: '{{ users }}'
 

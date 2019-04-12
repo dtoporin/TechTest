@@ -1,0 +1,6 @@
+- name: Add new users 
+  hosts: "{{ target }}"
+  become: True
+  
+  roles:
+    - role: adduser

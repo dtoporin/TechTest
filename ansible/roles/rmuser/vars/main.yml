@@ -1,0 +1,11 @@
+users:
+  - name: ann
+    groups:
+      - ''
+
+  - name: bob
+    groups:
+      - ''
+  
+  - name: john
+    groups:

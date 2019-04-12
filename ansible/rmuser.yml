@@ -1,0 +1,6 @@
+- name: Remove new users 
+  hosts: "{{ target }}"
+  become: True
+  
+  roles:
+    - role: rmuser

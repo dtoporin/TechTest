@@ -1,3 +1,4 @@
 .git
 ansible/hosts.ini
 ansible/*.retry
+*.retry

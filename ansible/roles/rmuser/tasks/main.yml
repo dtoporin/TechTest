@@ -1,0 +1,16 @@
+---
+- name: Remove user
+  user:
+    name: '{{ item.name }}'          
+    state: absent
+    remove: yes
+  loop: '{{ users }}'
+
+- name: Remove sudoers
+  shell: rm -f /etc/sudoers.d/{{ item.name }}
+  loop: '{{ users }}'
+
+- name: Remove limits
+  shell: sed -i '/{{ item.name }}/d' /etc/security/limits.conf
+  loop: '{{ users }}'
+

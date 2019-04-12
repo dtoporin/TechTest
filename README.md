@@ -1,4 +1,4 @@
-###TechTest
+## TechTest
 
 # Create a new user
 
@@ -9,4 +9,5 @@ Password minimal length in system = 12
 
 #### ansible
 Ansible role for the same task
-ansible/roles/adduser/vars/main.yml
+
+ansible/roles/adduser/vars/main.yml - all users parameters are set in this file. 

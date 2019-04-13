@@ -39,3 +39,8 @@ ansible/roles/adduser/vars/main.yml - list of users
 $ ansible-playbook -i hosts.ini rmuser.yml -e target=target_host
 ```
 target_host - target host or group of hosts from inventory file hosts.ini
+
+License
+----
+
+MIT
